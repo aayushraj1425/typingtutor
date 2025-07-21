@@ -9,12 +9,13 @@ const time3 = document.querySelector("#time3");
 const level1 = document.querySelector("#level1");
 const level2 = document.querySelector("#level2");
 const text = document.querySelector("#test-text");
+const displayText = document.querySelector("#display-text");
 const mins = document.querySelector('#minutes');
 const secs = document.querySelector('#seconds');
 
 let typing = false; /* Will be false unless user starts typing something */
 
-let test_time, test_level, test_words; 
+let testTime, testLevel, testWords; 
 time1.onclick = function () {
     if (typing == false) {
         setDisplayTime("time1", time1);
@@ -43,49 +44,49 @@ level2.onclick = function () {
     }
 }
 
-let prev_time;
-let prev_level;
-function setDisplayTime(time_type, time_type_DOM) {
+let prevTime;
+let prevLevel;
+function setDisplayTime(timeType, timeTypeDOM) {
     /* Changes DisplayTime to selected time type */
     
-    test_time = time[time_type];
-    mins.textContent = Math.floor(test_time / 60);
-    secs.textContent = `${test_time % 60 < 10 ? '0' : ''}${test_time % 60}`;
-    time_type_DOM.style.color = "rgb(85, 85, 85)";
-    time_type_DOM.style.fontWeight = "bold";
-    if (prev_time != time_type_DOM && prev_time != null) {
-        prev_time.style.color = "rgb(120, 116, 116)";
-        prev_time.style.fontWeight = "normal";
+    testTime = time[timeType];
+    mins.textContent = Math.floor(testTime / 60);
+    secs.textContent = `${testTime % 60 < 10 ? '0' : ''}${testTime % 60}`;
+    timeTypeDOM.style.color = "rgb(85, 85, 85)";
+    timeTypeDOM.style.fontWeight = "bold";
+    if (prevTime != timeTypeDOM && prevTime != null) {
+        prevTime.style.color = "rgb(120, 116, 116)";
+        prevTime.style.fontWeight = "normal";
     }
-    prev_time = time_type_DOM;
+    prevTime = timeTypeDOM;
 }
 
-function setLevel(level_type, level_type_DOM) {
+function setLevel(levelType, levelTypeDOM) {
     /* Sets Typing Test Level to selected level type */
 
-    test_level = level[level_type];
-    test_words = words[level_type];
-    level_type_DOM.style.color = "rgb(85, 85, 85)";
-    level_type_DOM.style.fontWeight = "bold";
-    if (prev_level != level_type_DOM && prev_level != null) {
-        prev_level.style.color = "rgb(120, 116, 116)";
-        prev_level.style.fontWeight = "normal";
+    testLevel = level[levelType];
+    testWords = words[levelType];
+    levelTypeDOM.style.color = "rgb(85, 85, 85)";
+    levelTypeDOM.style.fontWeight = "bold";
+    if (prevLevel != levelTypeDOM && prevLevel != null) {
+        prevLevel.style.color = "rgb(120, 116, 116)";
+        prevLevel.style.fontWeight = "normal";
     }
-    prev_level = level_type_DOM;
+    prevLevel = levelTypeDOM;
 }
 
 // Default Settings //
 setDisplayTime("time1", time1);
 setLevel("level1", level1);
 
-let current_key;
+let currentKey;
 function waitForKey () {
 /* Return promise for everytime user types a key */
 
     return new Promise((resolve) => {
         document.addEventListener('keydown', (event) => {
             // console.log("User typed:" + event.key);
-            // current_key = event.key;
+            // currentKey= event.key;
             typing = true;
             resolve(event.key);
         }, {once: true});
@@ -115,140 +116,140 @@ function startTimer(durationInSeconds) {
 }
 
 let x = 0; // Initial word index //
-function generateParagraph(x, test_words) {
-    /* Generates paragraph */
+let originalPara = "";
+function generateParaText(x, testWords) {
+    /* Generates paraText with each character in a span */
 
     text.innerHTML = "";
-    text.textContent = "";
-    test_words.forEach(function(word, index) {
-        if (index < x + 60) {
-           text.textContent += word + " ";
-        }
-    });
+    const paragraph = testWords.slice(x, x + 60).join(" ") + (" ");
+    for (let i = 0; i < paragraph.length; i++) {
+        const span = document.createElement("span");
+        span.textContent = paragraph[i].toLowerCase();
+        text.appendChild(span);
+    }
+    originalPara += paragraph.toLowerCase();
 }
 
 
-function mark_red(paragraph, char_index) {
+function markRed(paraSpans, currentLetterIndex) {
     /* Marks the selected character to red */
-
-    let target_char = paragraph.charAt(char_index);
-    let newText = paragraph.slice(0, char_index) + `<span style='color: red'>${target_char}</span>` + paragraph.slice(char_index + 1)
-    text.innerHTML = newText;
+    
+    paraSpans[currentLetterIndex].style.color = "red";   
 }
 
-function mark_green(paragraph, char_index) {
+function markGreen(paraSpans, currentLetterIndex) {
     /* Marks the selected character to green */
 
-    let target_char = paragraph.charAt(char_index);
-    let newText = paragraph.slice(0, char_index) + `<span style='color: green'>${target_char}</span>` + paragraph.slice(char_index + 1)
-    text.innerHTML = newText;
+    paraSpans[currentLetterIndex].style.color = "green";  
 }   
 
-function mark_back(paragraph, char_index) {
+function markBlack(paraSpans, currentLetterIndex) {
     /* Unmarks the selected character to default color */
-
-    let target_char = paragraph.charAt(char_index);
-    let newText = paragraph.slice(0, char_index) + `<span style='color: black'>${target_char}</span>` + paragraph.slice(char_index + 1)
-    text.innerHTML = newText;
+    
+    paraSpans[currentLetterIndex].style.color = "black";
 }
 
+let typedTextPara = "";
 async function typingTest () {
     /* Typing Test */
     
     /*
     const timer = new Promise((resolve) => {
-        startTimer(test_time);
+        startTimer(testTime);
         resolve("Time done");
     });
-    let time = test_time;
+    let time = testTime;
     */
 
-    let correct_words_typed = [];
-    let incorrect_words_typed = [];
-    let words_typed = [];
-    let current_word_index = 0;
-    let current_letter_index = 0;
-    // let correct_words = 0;
-    // let incorrect_words = 0;
-        
-    generateParagraph(x, test_words);
-    let given_words = text.textContent.trim().split(" ");
-    let paragraph = text.innerHTML;
+    let currentLetterIndex = 0;  
+    generateParaText(x, testWords);
+    let paraSpans = text.querySelectorAll("span");
 
-    current_key = await waitForKey();
-    startTimer(test_time);
+    currentKey = await waitForKey();
+    startTimer(testTime);
+    let textTyped = "";
 
-    let words_length_till_now = 0;
     while (typing == true && remainingTime > 0) {
-        let word_length = given_words[current_word_index].length;
+        const expectedChar = paraSpans[currentLetterIndex]?.textContent;
 
-        if (current_key === paragraph.charAt(current_letter_index)) {
-            console.log("Yes");
-            // mark_green(paragraph, current_letter_index);
-        }
-
-        else if (current_key != paragraph.charAt(current_letter_index)) {
-            console.log("No")
-            // mark_red(paragraph, current_letter_index)
-        }
-
-        current_key = await waitForKey();
-
-        if (current_key != "Backspace") {
-            current_letter_index++;
-        }
-
-        else if (current_key == "Backspace") {
-            mark_back(paragraph, current_letter_index);
-        }
-
-
-        if (current_letter_index - words_length_till_now == word_length) {
-            if (current_key != " ") {
-                mark_red(paragraph, current_letter_index);
-                
+        if (currentKey === "Backspace") {
+            if (currentLetterIndex > 0) {
+                currentLetterIndex--;
+                markBlack(paraSpans, currentLetterIndex);
+                textTyped = textTyped.slice(0, -1);
             }
-            if (given_words[current_word_index] == paragraph.substring(current_letter_index - word_length, current_letter_index)) {
-                // correct_words++;
-                words_typed.push(given_words[current_word_index]);
-                correct_words_typed.push(given_words[current_word_index]);
-                words_length_till_now += word_length + 1;
-            }
-            else if (given_words[current_word_index] != paragraph.substring(current_letter_index - word_length, current_letter_index)) {
-                // incorrect_words++;
-                words_typed.push(given_words[current_word_index]);
-                incorrect_words_typed.push(given_words[current_word_index])
-                words_length_till_now += word_length + 1;
-            }
-            console.log(current_word_index)
-            current_word_index++;
         }
 
-        if (current_word_index == given_words.length) {
-            x += 30;
-            generateParagraph(x, test_words);
-            current_letter_index = 0;
-            current_word_index = 0;
-            words_length_till_now = 0;
-            given_words = text.textContent.trim().split(" ");
-            paragraph = text.innerHTML;
+        else {
+            if (currentKey === " "  || expectedChar === " ") {
+                markRed(paraSpans, currentLetterIndex);
+                textTyped += "_";
+            }
+
+            else if (currentKey === expectedChar) {
+                markGreen(paraSpans, currentLetterIndex);
+                textTyped += currentKey;
+            }
+
+            else {
+                markRed(paraSpans, currentLetterIndex);
+                textTyped += currentKey;
+            }
+
+            currentLetterIndex++;
         }
+
+        if (currentLetterIndex === paraSpans.length) {
+            x += 60;  
+            typedTextPara += textTyped;
+            textTyped = "";
+            generateParaText(x, testWords);
+            currentLetterIndex = 0;
+            paraSpans = text.querySelectorAll("span");
+        }
+        currentKey = await waitForKey();
     }
 
-    if (remainingTime <= 0) {
-        displayResult();
+    if (x == 0) {
+        typedTextPara += textTyped;
     }
+
+    console.log(textTyped)
+    displayResult();
     /*
     await timer;
     timer.then((result) => {
         console.log("Time done:", result);
     })
     */
-};
+}; 
 
 function displayResult () {
     /* Displays the result of the timed typing test */
+    let correctWordsTyped = [];
+    let incorrectWordsTyped = [];
+    let wordsTyped = [];
+    let correctWords = 0;
+    let incorrectWords = 0;
 
+    let originalParaWords = originalPara.split(" ");
+    let typedParaWords = typedTextPara.split("_");
+
+    for (let i = 0; i < typedParaWords.length; i++) {
+        if (originalParaWords[i] === typedParaWords[i]) {
+            correctWordsTyped.push(typedParaWords[i]);
+        }
+        else if (originalParaWords[i] != typedParaWords[i]) {
+            incorrectWordsTyped.push(typedParaWords[i]);
+        }
+        wordsTyped.push(typedParaWords[i]);
+    }
+    correctWords = correctWordsTyped.length;
+    incorrectWords = incorrectWordsTyped.length;
+
+    let WPM = correctWords / (testTime / 60);
+    let accuracy = (correctWords / wordsTyped.length) * 100;
+    displayText.textContent = `Your WPM is: ${WPM} words per minute.`;
 }
 
 function Reset() {
@@ -258,4 +259,3 @@ function Reset() {
 
 // Initializes TypingTest function. Won't start unless the user types something. //
 typingTest(); 
-
